@@ -8,12 +8,22 @@ import os
 import psutil
 import json
 import platform
+import re
 from html import unescape
 import sys
 
-# === CONSTANTS ===
-# PWA_INSTANCE_URL = "https://mrvengenhariasa.sharepoint.com/sites/PlanejamentoDIPRD/"
-PWA_INSTANCE_URL = input("Enter the PWA instance URL: ").strip().rstrip("/") + "/"  # Ensure URL ends with a trailing slash
+# === FUNCTION TO VALIDATE PWA URL ===
+def validate_pwa_url(url):
+    pattern = r"^https://[a-zA-Z0-9-]+\.sharepoint\.com/sites/[a-zA-Z0-9_-]+/$"
+    return re.match(pattern, url)
+
+# === GET PWA INSTANCE URL ===
+while True:
+    PWA_INSTANCE_URL = input("Enter the PWA instance URL: ").strip().rstrip("/") + "/"  # Ensure URL ends with a trailing slash
+    if validate_pwa_url(PWA_INSTANCE_URL):
+        break
+    print("Invalid URL format. The URL should follow this pattern: https://TENANT_NAME.sharepoint.com/sites/PWA_SITE/")
+
 FILE_NAME = "pwa_users_groups"
 OUTPUT_PATH = f"~/Downloads/{FILE_NAME}.xlsx"
 
@@ -25,6 +35,7 @@ GROUP_EDIT_PAGE = f"{PWA_INSTANCE_URL}_layouts/15/PWA/Admin/AddModifyGroup.aspx?
 # Element Identifiers
 GROUP_CONTAINER_ID = "GridDataRow"
 USER_CONTAINER_ID = "ctl00_ctl00_PlaceHolderMain_PWA_PlaceHolderMain_idFormSectionUsers_ctl02_idSwpUsers_BetaList_Container"
+CATEGORY_CONTAINER_ID = "ctl00_ctl00_PlaceHolderMain_PWA_PlaceHolderMain_idFormSectionCategories_ctl02_idSwpCategories_BetaList_Container"
 
 sys.stdout.reconfigure(encoding='utf-8')
 
@@ -87,7 +98,7 @@ driver = webdriver.Chrome(options=options)
 # === LOGIN ===
 driver.get(LOGIN_URL)
 print("Please complete the login process in the browser window...")
-WebDriverWait(driver, 120).until(EC.url_changes(LOGIN_URL))
+WebDriverWait(driver, 180).until(EC.url_changes(LOGIN_URL))
 
 # === NAVIGATE TO GROUP MANAGEMENT ===
 driver.get(GROUPS_PAGE)
@@ -105,8 +116,10 @@ except:
 full_html_text = driver.page_source
 soup = BeautifulSoup(full_html_text, "html.parser")
 
-# === EXTRACT GROUP INFORMATION ===
 groups = []
+users = []
+categories = []
+
 grid_rows = soup.find_all("tr", id=GROUP_CONTAINER_ID)
 for row in grid_rows:
     columns = row.find_all("td")
@@ -127,15 +140,6 @@ for row in grid_rows:
                 "URL": full_group_url
             })
 
-if not groups:
-    print("Error: No groups found.")
-    driver.quit()
-    exit()
-
-print(f"Extracted {len(groups)} groups.")
-
-# === EXTRACT USER INFORMATION FROM EACH GROUP ===
-users = []
 for group in groups:
     driver.get(group["URL"])
     print(f"Accessing group page: {group['Group Name']}")
@@ -146,6 +150,8 @@ for group in groups:
         group_html = driver.page_source
         group_soup = BeautifulSoup(group_html, "html.parser")
         user_container = group_soup.find("td", id=USER_CONTAINER_ID)
+        category_container = group_soup.find("td", id=CATEGORY_CONTAINER_ID)
+        
         if user_container:
             for option in user_container.find_all("option", value=True):
                 user_uid = option["value"].strip()
@@ -156,11 +162,26 @@ for group in groups:
                     "User UID": user_uid,
                     "User Name": user_name
                 })
+        
+        if category_container:
+            for option in category_container.find_all("option", value=True):
+                category_name = option.text.strip()
+                categories.append({
+                    "Group UID": group["Group UID"],
+                    "Group Name": group["Group Name"],
+                    "Category Name": category_name
+                })
     except:
-        print(f"Failed to extract users for group: {group['Group Name']}")
+        print(f"Failed to extract details for group: {group['Group Name']}")
 
+df_groups = pd.DataFrame(groups)
 df_users = pd.DataFrame(users)
-df_users.to_excel(OUTPUT_PATH, index=False)
+df_categories = pd.DataFrame(categories)
+
+with pd.ExcelWriter(OUTPUT_PATH) as writer:
+    df_groups.to_excel(writer, sheet_name="Groups", index=False)
+    df_users.to_excel(writer, sheet_name="Users", index=False)
+    df_categories.to_excel(writer, sheet_name="Categories", index=False)
 
 print(f"Data extraction complete! Saved to {OUTPUT_PATH}")
 driver.quit()
