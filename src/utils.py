@@ -1,8 +1,6 @@
 import os
 import re
-import json
-import psutil
-import logging
+import textwrap
 
 def validate_pwa_url(url: str) -> bool:
     pattern = r"^https://[a-zA-Z0-9-]+\.sharepoint\.com/sites/[a-zA-Z0-9_-]+/$"
@@ -24,3 +22,30 @@ def get_pwa_instance_url() -> str:
             return url
         print("Formato de URL inválido. A URL deve seguir este padrão: https://TENANT_NAME.sharepoint.com/sites/PWA_SITE/")
 
+def start_screen():
+    welcome_message = textwrap.dedent(
+    """
+        ==========================================================================
+                        Bem-vindo ao extrator de dados do PWA
+        ==========================================================================
+
+        Requisitos:
+          - O Chrome deve estar instalado.
+          - Possuir em mãos o endereço da instância do PWA 
+            (Ex.: https://TENANT_NAME.sharepoint.com/sites/PWA_SITE/).
+
+        Você poderá usar seu perfil do Chrome se desejar aproveitar
+        a seção logada no PWA.
+
+        Saída:
+          - Um arquivo Excel será gerado com os dados extraídos.
+          - O arquivo será salvo na pasta de Downloads com o nome 'pwa_data.xlsx'.
+          - No arquivo há 3 páginas:
+              - Users: Lista de usuários associados a cada grupo
+                [Group UID | Group Name | User UID | User Name]
+              - Groups: Lista de grupos e suas informações
+                [Group UID | Group Name | Group Description | AD Group | Last Sync.]
+              - Categories: Lista de categorias associadas a cada grupo
+                [Category UID | Category Name | Group UID | Group Name]
+    """)
+    return welcome_message

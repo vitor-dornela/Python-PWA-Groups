@@ -8,12 +8,15 @@ from selenium.webdriver.support.ui import WebDriverWait
 from bs4 import BeautifulSoup
 
 from src.config import LOGIN_URL, GROUP_CONTAINER_ID, FILE_NAME, OUTPUT_DIRECTORY
-from src.utils import get_pwa_instance_url, get_output_file
+from src.utils import get_pwa_instance_url, get_output_file, start_screen
 from src.chrome_helpers import get_chrome_profiles, select_chrome_profile, wait_for_element, close_chrome, get_login
 from src.data_extraction import extract_groups, extract_details_from_group
 from src.data_output import save_to_excel
 
 def main():
+    # Display the welcome message.
+    print(start_screen())
+
     # Get the URLs and output file.
     pwa_instance_url = get_pwa_instance_url()
     group_edit_page = f"{pwa_instance_url}_layouts/15/PWA/Admin/AddModifyGroup.aspx?groupUid="

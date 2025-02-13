@@ -1,6 +1,4 @@
-import os
 import sys
-import platform
 import logging
 
 # Configure logging

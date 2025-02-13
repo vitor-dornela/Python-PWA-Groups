@@ -90,9 +90,9 @@ def get_login(driver, login_url):
     logging.info("Por favor, complete o processo de login na janela do navegador...")
 
     try:        
-        WebDriverWait(driver, 180).until(lambda d: "login.microsoftonline.com" not in d.current_url)
+        WebDriverWait(driver, 600).until(lambda d: "login.microsoftonline.com" not in d.current_url)
     except TimeoutException:
-        logging.error("Autenticação não concluída dentro do tempo limite de 180 segundos.")
+        logging.error("Autenticação não concluída dentro do tempo limite de 600 segundos.")
         raise Exception("Timeout: Microsoft authentication not completed.")
 
     logging.info("Autenticação concluída.")
