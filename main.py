@@ -9,7 +9,7 @@ from bs4 import BeautifulSoup
 
 from src.config import LOGIN_URL, GROUP_CONTAINER_ID, FILE_NAME, OUTPUT_DIRECTORY
 from src.utils import get_pwa_instance_url, get_output_file
-from src.chrome_helpers import get_chrome_profiles, select_chrome_profile, wait_for_element, close_chrome
+from src.chrome_helpers import get_chrome_profiles, select_chrome_profile, wait_for_element, close_chrome, get_login
 from src.data_extraction import extract_groups, extract_details_from_group
 from src.data_output import save_to_excel
 
@@ -32,9 +32,7 @@ def main():
     driver = webdriver.Chrome(options=options)
     try:
         # Prompt the user to log in.
-        driver.get(LOGIN_URL)
-        logging.info("Por favor, complete o processo de login na janela do navegador...")
-        WebDriverWait(driver, 180).until(EC.url_changes(LOGIN_URL))
+        get_login(driver, LOGIN_URL)
 
         # Minimize the browser window.
         driver.minimize_window()

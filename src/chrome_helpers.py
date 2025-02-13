@@ -5,6 +5,7 @@ import logging
 import psutil
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
+from selenium.common.exceptions import TimeoutException
 from .config import CHROME_TIMEOUT
 
 def get_chrome_profiles():
@@ -81,3 +82,17 @@ def close_chrome():
             except Exception as e:
                 logging.error("Não foi possível fechar o processo %s: %s", process.info["pid"], e)
     logging.info("Tentativa de fechar todas as instâncias do Chrome em execução.")
+
+
+
+def get_login(driver, login_url):     
+    driver.get(login_url)
+    logging.info("Por favor, complete o processo de login na janela do navegador...")
+
+    try:        
+        WebDriverWait(driver, 180).until(lambda d: "login.microsoftonline.com" not in d.current_url)
+    except TimeoutException:
+        logging.error("Autenticação não concluída dentro do tempo limite de 180 segundos.")
+        raise Exception("Timeout: Microsoft authentication not completed.")
+
+    logging.info("Autenticação concluída.")
