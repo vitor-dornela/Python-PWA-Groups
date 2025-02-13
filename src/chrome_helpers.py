@@ -26,11 +26,18 @@ def get_chrome_profiles():
 
     return chrome_path, profile_mapping
 
+import logging
+
 def select_chrome_profile(chrome_path, profile_mapping, options):
-    use_guest = input("Usar perfil de convidado? (opções: sim; não [selecione um perfil]): ").strip().lower()
-    if use_guest == "sim":
+    try:
+        use_guest = input("Usar perfil existente? (opções: sim [s]; nao [n] -> Iniciar como convidado): ").strip().lower()
+    except Exception as e:
+        logging.error("Erro ao ler a entrada do usuário: %s", e)
+        raise
+
+    if use_guest in ["nao", "n"]:
         options.add_argument("--guest")
-    else:
+    elif use_guest in ["sim", "s"]:
         if not chrome_path or not profile_mapping:
             raise Exception("Não foi possível detectar os perfis do Chrome. Certifique-se de que o Chrome está instalado e foi utilizado antes de executar este script.")
 
@@ -38,11 +45,27 @@ def select_chrome_profile(chrome_path, profile_mapping, options):
         for index, (profile_name, folder) in enumerate(profile_mapping.items(), 1):
             logging.info("[%s] %s", index, profile_name)
 
-        selected_index = int(input("Digite o número correspondente ao perfil que deseja usar: ")) - 1
-        profile_name, profile_folder = list(profile_mapping.items())[selected_index]
+        try:
+            selected_index_str = input("Digite o número correspondente ao perfil que deseja usar: ")
+            selected_index = int(selected_index_str) - 1
+            profile_list = list(profile_mapping.items())
+            if selected_index < 0 or selected_index >= len(profile_list):
+                raise ValueError("Índice selecionado fora do intervalo.")
+            profile_name, profile_folder = profile_list[selected_index]
+        except ValueError as ve:
+            logging.error("Entrada inválida: %s", ve)
+            raise
+        except Exception as e:
+            logging.error("Erro ao selecionar o perfil: %s", e)
+            raise
+
         options.add_argument(f"--user-data-dir={chrome_path}")
         options.add_argument(f"--profile-directory={profile_folder}")
+    else:
+        raise Exception("Opção inválida. Por favor, responda com 'sim' ou 'nao' (ou 's' ou 'n').")
+
     return options
+
 
 def wait_for_element(driver, by, identifier, timeout=CHROME_TIMEOUT):
     return WebDriverWait(driver, timeout).until(EC.presence_of_element_located((by, identifier)))
