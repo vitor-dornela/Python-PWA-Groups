@@ -39,13 +39,11 @@ def start_screen():
         no PWA ou, entrar em um sessão não autenticada (convidado).
         ---------------------------------------------------------------------------
         Saída:
-          - Um arquivo Excel será gerado na pasta Downloads com o nome 'pwa_data.xlsx'.
+          - Um arquivo Excel será gerado na pasta Downloads com o nome 'pwa_data'.
           - No arquivo há 3 páginas:
               - Users: Lista de usuários associados a cada grupo
-                [Group UID | Group Name | User UID | User Name]
               - Groups: Lista de grupos e suas informações
-                [Group UID | Group Name | Group Description | AD Group | Last Sync.]
               - Categories: Lista de categorias associadas a cada grupo
-                [Category UID | Category Name | Group UID | Group Name]
+        ---------------------------------------------------------------------------
     """)
     return welcome_message
