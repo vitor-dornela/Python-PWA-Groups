@@ -28,18 +28,18 @@ def start_screen():
         ==========================================================================
                         Bem-vindo ao extrator de dados do PWA
         ==========================================================================
-
         Requisitos:
-          - O Chrome deve estar instalado.
-          - Possuir em mãos o endereço da instância do PWA 
-            (Ex.: https://TENANT_NAME.sharepoint.com/sites/PWA_SITE/).
-
-        Você poderá usar seu perfil do Chrome se desejar aproveitar
-        a seção logada no PWA.
-
+          - O navegador Chrome deve estar instalado.            
+          - Possuir em mãos o link da instância do PWA 
+            (Ex.: https://<TENANT_NAME>.sharepoint.com/sites/<PWA_SITE>/).
+        ---------------------------------------------------------------------------
+        ATENÇÃO: O script fechará o Chrome após inserir o link. Salve seu trabalho!
+        ---------------------------------------------------------------------------
+        Você poderá usar seu perfil do Chrome se desejar aproveitar a sessão logada 
+        no PWA ou, entrar em um sessão não autenticada (convidado).
+        ---------------------------------------------------------------------------
         Saída:
-          - Um arquivo Excel será gerado com os dados extraídos.
-          - O arquivo será salvo na pasta de Downloads com o nome 'pwa_data.xlsx'.
+          - Um arquivo Excel será gerado na pasta Downloads com o nome 'pwa_data.xlsx'.
           - No arquivo há 3 páginas:
               - Users: Lista de usuários associados a cada grupo
                 [Group UID | Group Name | User UID | User Name]
