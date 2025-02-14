@@ -44,5 +44,6 @@ def start_screen():
               - Users: Lista de usuários associados a cada grupo
               - Groups: Lista de grupos e suas informações
               - Categories: Lista de categorias associadas a cada grupo
+        ---------------------------------------------------------------------------
     """)
     return welcome_message
