@@ -70,5 +70,3 @@ Este projeto está licenciado sob a licença MIT. Sinta-se livre para usar e mod
 
 ---
 
-Desenvolvido com ❤️ por Prosperi
-
