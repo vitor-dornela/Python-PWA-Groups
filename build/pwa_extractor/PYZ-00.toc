@@ -1,4 +1,4 @@
-('C:\\Users\\vitor.mascarenhas\\Python-PWA-Groups\\build\\pwa_extractor\\PYZ-00.pyz',
+('C:\\Users\\vitor.mascarenhas\\Python-PWA-Groups\\build\\PWA_EXTRACTOR\\PYZ-00.pyz',
  [('IPython',
    'C:\\Users\\vitor.mascarenhas\\AppData\\Local\\Programs\\Python\\Python312\\Lib\\site-packages\\IPython\\__init__.py',
    'PYMODULE'),
