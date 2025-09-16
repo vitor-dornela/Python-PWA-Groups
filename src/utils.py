@@ -29,7 +29,7 @@ def invalid_url_message():
 
 def get_pwa_instance_url() -> str:
     while True:
-        url = input("Digite a URL da instância do PWA: ").strip()
+        url = input("Digite a URL da instância do PWA: \n").strip()
         
         if validate_pwa_url(url):
             # Extract the base URL (everything up to and including the site name)

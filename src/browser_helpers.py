@@ -71,17 +71,17 @@ def close_chrome():
 
 def get_browser_choice():
     """Ask user to choose between Chrome and Edge browsers."""
-    print("\n🌐 Selecione o navegador para usar:")
-    print("1. Google Chrome")
-    print("2. Microsoft Edge")
+    print("🌐 Escolha o navegador:")
+    print("1. Microsoft Edge (padrão)")
+    print("2. Google Chrome")
     
     while True:
-        choice = input("\nDigite 1 para Chrome ou 2 para Edge (padrão: Chrome): ").strip()
+        choice = input("Navegador escolhido: ").strip()
         
         if choice == "" or choice == "1":
-            return "chrome"
-        elif choice == "2":
             return "edge"
+        elif choice == "2":
+            return "chrome"
         else:
             print("❌ Opção inválida. Digite 1 ou 2.")
 
