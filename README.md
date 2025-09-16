@@ -5,22 +5,23 @@ Bem-vindo ao projeto **Extrator de Dados do PWA**, um script automatizado em Pyt
 ---
 
 ## 🚀 **Funcionalidades Principais**
-- ✅ Autenticação automatizada no PWA via navegador Chrome
+- ✅ Autenticação automatizada no PWA via navegador Chrome ou Edge
+- ✅ Seleção de navegador (Chrome ou Microsoft Edge)
 - ✅ Extração de informações de Grupos, Usuários e Categorias
 - ✅ Geração automática de arquivo Excel com tabelas nativas
 - ✅ Filtros automáticos e formatação profissional
 - ✅ Mensagens de progresso durante a extração
-- ✅ Suporte para modo convidado do Chrome
+- ✅ Suporte para modo convidado em ambos os navegadores
 
 ---
 
 ## 🛑 **Pré-requisitos**
 
 - **Python 3.11 ou superior**
-- **Google Chrome** instalado
+- **Google Chrome** OU **Microsoft Edge** instalado
 - **Acesso ao PWA** (Project Web App) do SharePoint
 
-> **💡 Nota:** O WebDriver do Chrome é gerenciado automaticamente pelo Selenium.
+> **💡 Nota:** Os WebDrivers são gerenciados automaticamente pelo Selenium.
 
 ---
 
@@ -60,6 +61,7 @@ python main.py
 ```
 
 ### 5. **Siga as instruções na tela:**
+   - Escolha o navegador (Chrome ou Edge)
    - Informe a URL da instância do PWA
    - Complete o login no navegador que será aberto automaticamente
    - Aguarde a extração dos dados

@@ -49,12 +49,12 @@ def start_screen():
         ==========================================================================
         
         Requisitos:
-          - O navegador Chrome deve estar instalado.            
+          - Navegador Chrome ou Microsoft Edge instalado.            
           - Possuir em mãos o link da instância do PWA 
             (Ex.: https://<TENANT_NAME>.sharepoint.com/sites/<PWA_SITE>/
 
         ---------------------------------------------------------------------------
-        ATENÇÃO: O script fechará o Chrome após inserir o link. Salve seu trabalho!
+        ATENÇÃO: O script fechará navegadores após inserir o link. Salve seu trabalho!
         ---------------------------------------------------------------------------
 
         Saída:
@@ -68,12 +68,12 @@ def start_screen():
     return welcome_message
 
 
-def chrome_config_message():
-    """Return Chrome configuration information message."""
-    message = textwrap.dedent("""
+def browser_config_message(browser_name="Chrome"):
+    """Return browser configuration information message."""
+    message = textwrap.dedent(f"""
         
         ---------------------------------------------------------------------------
-        ⚠️                        REINICIANDO O CHROME                          ⚠️
+        ⚠️                     REINICIANDO O {browser_name.upper()}                     ⚠️
         ---------------------------------------------------------------------------
         ℹ️   Usando modo convidado. 
         
@@ -81,6 +81,11 @@ def chrome_config_message():
         ---------------------------------------------------------------------------
     """)
     return message
+
+
+def chrome_config_message():
+    """Return Chrome configuration information message - legacy function."""
+    return browser_config_message("Chrome")
 
 
 def browser_closed_message():
