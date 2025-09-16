@@ -6,10 +6,10 @@ from selenium import webdriver
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.common.exceptions import TimeoutException
-from .config import CHROME_TIMEOUT
+from .config import BROWSER_TIMEOUT
 
 
-def wait_for_element(driver, by, identifier, timeout=CHROME_TIMEOUT):
+def wait_for_element(driver, by, identifier, timeout=BROWSER_TIMEOUT):
     """Wait for an element to be present on the page."""
     return WebDriverWait(driver, timeout).until(EC.presence_of_element_located((by, identifier)))
 
