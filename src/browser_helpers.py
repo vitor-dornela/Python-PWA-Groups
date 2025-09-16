@@ -14,9 +14,15 @@ def wait_for_element(driver, by, identifier, timeout=BROWSER_TIMEOUT):
     return WebDriverWait(driver, timeout).until(EC.presence_of_element_located((by, identifier)))
 
 
-def close_browsers():
-    """Closes any running Chrome and Edge processes aggressively."""
+def close_browsers(force_close=False):
+    """Closes running browser processes only if explicitly requested."""
+    if not force_close:
+        logging.info("Mantendo navegadores existentes abertos...")
+        return
+        
+    # Only close all browsers if explicitly requested
     browsers = ["chrome.exe", "msedge.exe", "MicrosoftEdge.exe"]
+    logging.info("Fechando todas as instâncias dos navegadores...")
     
     for browser in browsers:
         # First, try to close browser gracefully
@@ -56,7 +62,6 @@ def close_browsers():
     
     # Give extra time to ensure all processes are fully closed and file locks are released
     time.sleep(3)
-    logging.info("Tentativa de fechar todas as instâncias dos navegadores em execução.")
 
 
 def close_chrome():

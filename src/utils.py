@@ -54,7 +54,7 @@ def start_screen():
             (Ex.: https://<TENANT_NAME>.sharepoint.com/sites/<PWA_SITE>/
 
         ---------------------------------------------------------------------------
-        ATENÇÃO: O script fechará navegadores após inserir o link. Salve seu trabalho!
+        ℹ️  INFORMAÇÃO: O script abrirá uma nova janela do navegador selecionado.
         ---------------------------------------------------------------------------
 
         Saída:
@@ -73,9 +73,9 @@ def browser_config_message(browser_name="Chrome"):
     message = textwrap.dedent(f"""
         
         ---------------------------------------------------------------------------
-        ⚠️                     REINICIANDO O {browser_name.upper()}                     ⚠️
+        🚀                     INICIANDO {browser_name.upper()}                     🚀
         ---------------------------------------------------------------------------
-        ℹ️   Usando modo convidado. 
+        ℹ️   Abrindo nova janela em modo convidado. 
         
         Você precisará inserir suas credenciais manualmente.
         ---------------------------------------------------------------------------

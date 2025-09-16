@@ -35,9 +35,6 @@ def main():
     groups_page = f"{pwa_instance_url}_layouts/15/PWA/Admin/ManageGroups.aspx"
     output_file = get_output_file(FILE_NAME, OUTPUT_DIRECTORY)
 
-    # Close any running browser instances.
-    close_browsers()
-
     # Display browser configuration message
     browser_name = "Microsoft Edge" if browser_choice == "edge" else "Google Chrome"
     print(browser_config_message(browser_name))
