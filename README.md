@@ -68,6 +68,33 @@ python main.py
 
 ---
 
+## 📦 **Gerar Executável (Opcional)**
+
+Para criar um arquivo executável (.exe) que não requer Python instalado:
+
+### 1. **Instalar PyInstaller:**
+```bash
+pip install pyinstaller
+```
+
+### 2. **Gerar o executável:**
+```bash
+pyinstaller --onefile --console --name="PWA_EXTRACTOR" main.py
+```
+
+### 3. **Localizar o executável:**
+- O arquivo `PWA_EXTRACTOR.exe` será criado na pasta `dist/`
+- Copie este arquivo para qualquer computador Windows
+- Execute com duplo clique (não requer Python instalado)
+
+> **💡 Vantagens do executável:**
+> - ✅ Não requer Python instalado no computador de destino
+> - ✅ Todas as dependências incluídas automaticamente
+> - ✅ Facilita distribuição em ambientes corporativos
+> - ✅ Execução simples com duplo clique
+
+---
+
 ## 📂 **Saída (Output)**
 
 Um arquivo Excel (`pwa_data.xlsx`) será gerado na pasta `Downloads`, contendo tabelas formatadas com:
