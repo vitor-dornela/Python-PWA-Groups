@@ -21,8 +21,8 @@ def invalid_url_message():
     message = textwrap.dedent("""
         Formato de URL inválido. A URL deve seguir este padrão:
           - https://TENANT_NAME.sharepoint.com/sites/PWA_SITE/
-          - https://TENANT_NAME.sharepoint.com/sites/PWA_SITE/default.aspx
           - https://TENANT_NAME.sharepoint.com/sites/PWA_SITE/qualquer/caminho/
+          - TENANT_NAME.sharepoint.com/sites/PWA_SITE/
     """)
     return message
 
@@ -30,6 +30,10 @@ def invalid_url_message():
 def get_pwa_instance_url() -> str:
     while True:
         url = input("Digite a URL da instância do PWA: \n").strip()
+        
+        # Auto-add https:// if user forgot to include it
+        if url and not url.startswith(('http://', 'https://')):
+            url = 'https://' + url
         
         if validate_pwa_url(url):
             # Extract the base URL (everything up to and including the site name)
