@@ -63,8 +63,9 @@ def start_screen():
 
         Saída:
           - Um arquivo Excel será gerado na pasta Downloads com o nome 'pwa_data'.
-          - No arquivo há 3 páginas:
-              - Users: Lista de usuários associados a cada grupo
+          - No arquivo há 4 páginas:
+              - UsersGroups: Lista de usuários associados a cada grupo
+              - CountUsersGroups: Contagem de usuários por grupo
               - Groups: Lista de grupos e suas informações
               - Categories: Lista de categorias associadas a cada grupo
         ---------------------------------------------------------------------------

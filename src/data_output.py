@@ -43,11 +43,24 @@ def save_to_excel(groups: list, users: list, categories: list, output_file: str)
     df_users = pd.DataFrame(users)
     df_categories = pd.DataFrame(categories).sort_values(by="Category Name") if categories else pd.DataFrame()
 
+    # Create CountUsersGroups aggregation
+    df_count_users_groups = pd.DataFrame()
+    if not df_users.empty:
+        # Count users per group
+        user_count_by_group = df_users.groupby('Group Name').size().reset_index(name='UsersCount')
+        user_count_by_group = user_count_by_group.sort_values(by='Group Name')
+        df_count_users_groups = user_count_by_group
+
     with pd.ExcelWriter(output_file, engine='openpyxl') as writer:
-        # Save and format Users sheet
+        # Save and format UsersGroups sheet (renamed from Users)
         if not df_users.empty:
-            df_users.to_excel(writer, sheet_name="Users", index=False)
-            _create_table_and_format(writer.sheets["Users"], df_users, "UsersTable", "TableStyleMedium4")
+            df_users.to_excel(writer, sheet_name="UsersGroups", index=False)
+            _create_table_and_format(writer.sheets["UsersGroups"], df_users, "UsersGroupsTable", "TableStyleMedium4")
+
+        # Save and format CountUsersGroups sheet (new aggregation)
+        if not df_count_users_groups.empty:
+            df_count_users_groups.to_excel(writer, sheet_name="CountUsersGroups", index=False)
+            _create_table_and_format(writer.sheets["CountUsersGroups"], df_count_users_groups, "CountUsersGroupsTable", "TableStyleMedium3")
 
         # Save and format Groups sheet
         if not df_groups.empty:
