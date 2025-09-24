@@ -55,9 +55,9 @@ def save_to_excel(groups: list, users_groups: list, categories: list, all_users_
         df_count_users_groups = user_count_by_group
 
     with pd.ExcelWriter(output_file, engine='openpyxl') as writer:
-        # Save and format new Users sheet (detailed info from Excel export)
+        # Always save Users sheet (detailed info from Excel export)
+        df_all_users.to_excel(writer, sheet_name="Users", index=False)
         if not df_all_users.empty:
-            df_all_users.to_excel(writer, sheet_name="Users", index=False)
             _create_table_and_format(writer.sheets["Users"], df_all_users, "UsersTable", "TableStyleMedium2")
 
         # Save and format UsersGroups sheet (user-group relationships)
