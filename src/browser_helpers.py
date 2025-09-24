@@ -2,10 +2,13 @@ import logging
 import psutil
 import time
 import subprocess
+import os
+import glob
 from selenium import webdriver
+from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
-from selenium.common.exceptions import TimeoutException
+from selenium.common.exceptions import TimeoutException, NoSuchElementException
 from .config import BROWSER_TIMEOUT
 
 
@@ -112,6 +115,15 @@ def create_chrome_driver():
     options.add_argument("--disable-translate")
     options.add_argument("--hide-scrollbars")
     options.add_argument("--mute-audio")
+    
+    # Download preferences
+    download_prefs = {
+        "profile.default_content_settings.popups": 0,
+        "download.prompt_for_download": False,
+        "download.directory_upgrade": True,
+        "safebrowsing.enabled": True
+    }
+    options.add_experimental_option("prefs", download_prefs)
     options.add_experimental_option("useAutomationExtension", False)
     options.add_experimental_option("excludeSwitches", ["enable-automation", "enable-logging"])
     options.add_experimental_option('excludeSwitches', ['enable-logging'])
@@ -154,6 +166,15 @@ def create_edge_driver():
     options.add_argument("--disable-translate")
     options.add_argument("--hide-scrollbars")
     options.add_argument("--mute-audio")
+    
+    # Download preferences for Edge
+    download_prefs = {
+        "profile.default_content_settings.popups": 0,
+        "download.prompt_for_download": False,
+        "download.directory_upgrade": True,
+        "safebrowsing.enabled": True
+    }
+    options.add_experimental_option("prefs", download_prefs)
     options.add_experimental_option("useAutomationExtension", False)
     options.add_experimental_option("excludeSwitches", ["enable-automation", "enable-logging"])
 
@@ -225,3 +246,155 @@ def get_login(driver, login_url):
             raise Exception("Erro durante o processo de login. Verifique se o navegador não foi fechado.")
 
     logging.info("Autenticação concluída.")
+
+
+def export_users_to_excel(driver, manage_users_url, download_dir=None):
+    """
+    Navigate to ManageUsers page and download Excel export.
+    Uses a dedicated temporary directory to ensure we get the right file.
+    Returns the path to the downloaded file or None if failed.
+    """
+    import tempfile
+    import shutil
+    
+    # Create a unique temporary directory for this download
+    temp_download_dir = tempfile.mkdtemp(prefix="pwa_users_export_")
+    
+    try:
+        logging.info("Navegando para a página de gerenciamento de usuários...")
+        driver.get(manage_users_url)
+        
+        # Wait for page to load
+        wait_for_element(driver, By.TAG_NAME, "body", timeout=20)
+        time.sleep(3)  # Extra wait for page to fully render
+        
+        # Configure browser to download to our temp directory
+        _configure_browser_downloads(driver, temp_download_dir)
+        
+        # Look for Export to Excel button - try common selectors
+        export_button = None
+        possible_selectors = [
+            "//input[@value='Export to Excel']",
+            "//button[contains(text(), 'Export to Excel')]",
+            "//a[contains(text(), 'Export to Excel')]",
+            "//input[contains(@id, 'Export')]",
+            "//input[contains(@class, 'export')]",
+            "//*[contains(text(), 'Export to Excel')]",
+            "//span[contains(text(), 'Export to Excel')]/parent::*",
+            "//*[@title='Export to Excel']"
+        ]
+        
+        for selector in possible_selectors:
+            try:
+                export_button = driver.find_element(By.XPATH, selector)
+                logging.info(f"Botão 'Export to Excel' encontrado usando: {selector}")
+                break
+            except NoSuchElementException:
+                continue
+        
+        if not export_button:
+            logging.error("Botão 'Export to Excel' não encontrado na página")
+            # List available elements for debugging
+            try:
+                page_text = driver.page_source
+                if "export" in page_text.lower():
+                    logging.info("Palavra 'export' encontrada na página - verifique o seletor manualmente")
+            except:
+                pass
+            return None
+        
+        logging.info("Clicando no botão 'Export to Excel'...")
+        
+        # Record timestamp before clicking
+        click_time = time.time()
+        export_button.click()
+        
+        # Wait for download to complete in temp directory
+        max_wait_time = 45  # seconds - increased for larger files
+        start_time = time.time()
+        
+        downloaded_file = None
+        while time.time() - start_time < max_wait_time:
+            # Look for any Excel files in temp directory
+            excel_files = glob.glob(os.path.join(temp_download_dir, "*.xlsx"))
+            
+            if excel_files:
+                # Find the file created after our click
+                for file_path in excel_files:
+                    file_creation_time = os.path.getctime(file_path)
+                    if file_creation_time >= click_time:
+                        # Verify file is completely downloaded (not partial)
+                        if _is_download_complete(file_path):
+                            downloaded_file = file_path
+                            break
+                
+                if downloaded_file:
+                    break
+            
+            time.sleep(1)
+        
+        if not downloaded_file:
+            logging.error("Timeout esperando o download do arquivo Excel")
+            return None
+        
+        # Move file to final destination with timestamp to avoid conflicts
+        if download_dir is None:
+            download_dir = os.path.expanduser("~/Downloads")
+        
+        timestamp = time.strftime("%Y%m%d_%H%M%S")
+        final_filename = f"pwa_users_export_{timestamp}.xlsx"
+        final_path = os.path.join(download_dir, final_filename)
+        
+        shutil.move(downloaded_file, final_path)
+        logging.info(f"Download completo e movido para: {final_path}")
+        
+        return final_path
+        
+    except Exception as e:
+        logging.error(f"Erro ao exportar usuários para Excel: {e}")
+        return None
+        
+    finally:
+        # Clean up temp directory
+        try:
+            shutil.rmtree(temp_download_dir, ignore_errors=True)
+        except:
+            pass
+
+
+def _configure_browser_downloads(driver, download_dir):
+    """Configure browser to download files to specific directory."""
+    try:
+        # This works for Chrome - need to check browser type for Edge
+        driver.execute_cdp_cmd('Page.setDownloadBehavior', {
+            'behavior': 'allow',
+            'downloadPath': download_dir
+        })
+        logging.info(f"Configurado diretório de download: {download_dir}")
+    except Exception as e:
+        logging.warning(f"Não foi possível configurar diretório de download: {e}")
+
+
+def _is_download_complete(file_path, min_size_bytes=1024):
+    """
+    Check if download is complete by verifying:
+    1. File exists and has minimum size
+    2. File is not being written to (stable size over time)
+    """
+    try:
+        if not os.path.exists(file_path):
+            return False
+        
+        # Check minimum size
+        initial_size = os.path.getsize(file_path)
+        if initial_size < min_size_bytes:
+            return False
+        
+        # Wait and check if size is stable (not growing)
+        time.sleep(1)
+        final_size = os.path.getsize(file_path)
+        
+        return initial_size == final_size
+        
+    except Exception:
+        return False

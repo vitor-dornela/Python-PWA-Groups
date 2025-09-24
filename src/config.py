@@ -13,6 +13,7 @@ LOGIN_URL = "https://login.microsoftonline.com/"
 GROUP_CONTAINER_ID = "GridDataRow"
 USER_CONTAINER_ID = "ctl00_ctl00_PlaceHolderMain_PWA_PlaceHolderMain_idFormSectionUsers_ctl02_idSwpUsers_BetaList_Container"
 CATEGORY_CONTAINER_ID = "ctl00_ctl00_PlaceHolderMain_PWA_PlaceHolderMain_idFormSectionCategories_ctl02_idSwpCategories_BetaList_Container"
+MANAGE_USERS_PATH = "_layouts/15/pwa/Admin/ManageUsers.aspx"
 BROWSER_TIMEOUT = 10
 
 sys.stdout.reconfigure(encoding='utf-8')

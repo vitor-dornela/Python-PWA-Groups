@@ -59,6 +59,7 @@ def start_screen():
 
         ---------------------------------------------------------------------------
         ℹ️  INFORMAÇÃO: O script abrirá uma nova janela do navegador selecionado.
+        🚀  NOVO: Método Excel Export para extração mais rápida de usuários!
         ---------------------------------------------------------------------------
 
         Saída:
