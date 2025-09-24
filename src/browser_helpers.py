@@ -271,9 +271,10 @@ def export_users_to_excel(driver, manage_users_url, download_dir=None):
         # Configure browser to download to our temp directory
         _configure_browser_downloads(driver, temp_download_dir)
         
-        # Look for Export to Excel button - try common selectors
+        # Look for Export to Excel button - try extensive selectors
         export_button = None
         possible_selectors = [
+            # Standard button/input patterns
             "//input[@value='Export to Excel']",
             "//button[contains(text(), 'Export to Excel')]",
             "//a[contains(text(), 'Export to Excel')]",
@@ -281,26 +282,82 @@ def export_users_to_excel(driver, manage_users_url, download_dir=None):
             "//input[contains(@class, 'export')]",
             "//*[contains(text(), 'Export to Excel')]",
             "//span[contains(text(), 'Export to Excel')]/parent::*",
-            "//*[@title='Export to Excel']"
+            "//*[@title='Export to Excel']",
+            
+            # SharePoint specific patterns
+            "//input[contains(@id, 'ExportToExcel')]", 
+            "//input[contains(@name, 'Export')]",
+            "//a[contains(@href, 'Export')]",
+            "//button[contains(@class, 'export')]",
+            "//*[contains(@onclick, 'Export')]",
+            
+            # Ribbon/menu patterns
+            "//span[text()='Export to Excel']",
+            "//div[contains(@title, 'Export')]",
+            "//*[@aria-label='Export to Excel']",
+            
+            # Case variations
+            "//input[@value='Export To Excel']",
+            "//*[contains(text(), 'Export To Excel')]",
+            "//*[contains(text(), 'EXPORT TO EXCEL')]",
+            "//*[contains(text(), 'export to excel')]",
+            
+            # Partial text matches
+            "//*[contains(text(), 'Export')]//parent::*[contains(text(), 'Excel')]",
+            "//*[contains(text(), 'Excel')]//parent::*[contains(text(), 'Export')]"
         ]
         
-        for selector in possible_selectors:
+        logging.info("Procurando botão 'Export to Excel' com múltiplos seletores...")
+        
+        for i, selector in enumerate(possible_selectors):
             try:
                 export_button = driver.find_element(By.XPATH, selector)
-                logging.info(f"Botão 'Export to Excel' encontrado usando: {selector}")
+                logging.info(f"✅ Botão 'Export to Excel' encontrado usando seletor #{i+1}: {selector}")
                 break
             except NoSuchElementException:
                 continue
         
         if not export_button:
-            logging.error("Botão 'Export to Excel' não encontrado na página")
-            # List available elements for debugging
+            logging.error("❌ Botão 'Export to Excel' não encontrado com nenhum seletor")
+            
+            # Enhanced debugging information
             try:
-                page_text = driver.page_source
-                if "export" in page_text.lower():
-                    logging.info("Palavra 'export' encontrada na página - verifique o seletor manualmente")
-            except:
-                pass
+                page_text = driver.page_source.lower()
+                
+                # Check for various export-related terms
+                export_terms = ['export', 'excel', 'download', 'save', 'download']
+                found_terms = [term for term in export_terms if term in page_text]
+                
+                if found_terms:
+                    logging.info(f"🔍 Termos relacionados encontrados na página: {found_terms}")
+                
+                # Look for any buttons or inputs on the page
+                buttons = driver.find_elements(By.TAG_NAME, "button")
+                inputs = driver.find_elements(By.TAG_NAME, "input")
+                links = driver.find_elements(By.TAG_NAME, "a")
+                
+                logging.info(f"🔍 Elementos encontrados na página: {len(buttons)} botões, {len(inputs)} inputs, {len(links)} links")
+                
+                # Log some button/input text for debugging
+                for i, button in enumerate(buttons[:5]):  # First 5 buttons
+                    try:
+                        text = button.text or button.get_attribute('value') or button.get_attribute('title')
+                        if text:
+                            logging.info(f"   Botão {i+1}: '{text}'")
+                    except:
+                        pass
+                        
+                for i, inp in enumerate(inputs[:5]):  # First 5 inputs
+                    try:
+                        value = inp.get_attribute('value') or inp.get_attribute('title')
+                        if value:
+                            logging.info(f"   Input {i+1}: '{value}'")
+                    except:
+                        pass
+                
+            except Exception as debug_error:
+                logging.warning(f"Erro ao coletar informações de debug: {debug_error}")
+            
             return None
         
         logging.info("Clicando no botão 'Export to Excel'...")
