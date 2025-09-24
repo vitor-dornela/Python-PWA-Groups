@@ -81,9 +81,9 @@ def process_downloaded_users_excel(file_path: str) -> List[Dict]:
 def extract_users_from_excel_export(driver, pwa_base_url: str) -> List[Dict]:
     """
     High-level function to extract user data using Excel export method.
+    First tries browser extraction, then falls back to file download if needed.
     Returns list of user dictionaries.
     """
-    from .browser_helpers import export_users_to_excel
     from .config import MANAGE_USERS_PATH
     
     # Construct the ManageUsers URL
@@ -91,19 +91,35 @@ def extract_users_from_excel_export(driver, pwa_base_url: str) -> List[Dict]:
     
     logging.info("Iniciando extração de usuários via Export to Excel...")
     
-    # Download the Excel file
-    downloaded_file = export_users_to_excel(driver, manage_users_url)
+    # Method 1: Extract from browser (handles when SharePoint opens data in browser)
+    try:
+        from .browser_user_extraction import extract_users_from_browser_export
+        users_data = extract_users_from_browser_export(driver, manage_users_url)
+        
+        if users_data:
+            logging.info(f"✅ Extração via navegador bem-sucedida: {len(users_data)} usuários encontrados")
+            return users_data
+        else:
+            logging.warning("⚠️ Extração via navegador não retornou dados")
+            
+    except Exception as e:
+        logging.warning(f"⚠️ Erro na extração via navegador: {e}")
     
-    if not downloaded_file:
-        logging.error("Falha no download do arquivo Excel de usuários")
-        return []
+    # Method 2: Fallback to file download approach
+    try:
+        from .browser_helpers import export_users_to_excel
+        logging.info("Tentando método de download de arquivo como fallback...")
+        
+        downloaded_file = export_users_to_excel(driver, manage_users_url)
+        
+        if downloaded_file:
+            users_data = process_downloaded_users_excel(downloaded_file)
+            if users_data:
+                logging.info(f"✅ Extração via download bem-sucedida: {len(users_data)} usuários encontrados")
+                return users_data
     
-    # Process the downloaded file
-    users_data = process_downloaded_users_excel(downloaded_file)
+    except Exception as e:
+        logging.warning(f"⚠️ Erro no método de download: {e}")
     
-    if users_data:
-        logging.info(f"✅ Extração via Excel concluída: {len(users_data)} usuários encontrados")
-    else:
-        logging.warning("⚠️ Nenhum usuário encontrado no arquivo Excel")
-    
-    return users_data
+    logging.error("❌ Ambos os métodos de extração falharam")
+    return []
