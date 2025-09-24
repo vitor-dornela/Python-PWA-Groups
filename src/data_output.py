@@ -60,8 +60,7 @@ def save_to_excel(groups: list, users_groups: list, categories: list, all_users_
     distinct_categories = len({cat.get('Category UID') for cat in categories if cat.get('Category UID')})
     distinct_users = len({user.get('User UID') for user in all_users_detailed if user.get('User UID')})
     
-    logging.info("Salvando dados em Excel: %d grupos, %d categorias, %d usuários", 
-                distinct_groups, distinct_categories, distinct_users)
+    logging.info("Salvando dados em Excel: %d grupos, %d categorias, %d usuários", distinct_groups, distinct_categories, distinct_users)
     
     df_groups = pd.DataFrame(groups)
     df_users_groups = pd.DataFrame(users_groups)

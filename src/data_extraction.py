@@ -2,6 +2,7 @@ import logging
 import time
 from bs4 import BeautifulSoup
 from .config import GROUP_CONTAINER_ID, USER_CONTAINER_ID, CATEGORY_CONTAINER_ID, USERS_GRID_ID
+from .browser_helpers import go_to_next_page
 
 def extract_groups(soup: BeautifulSoup, group_edit_page: str) -> list:
     groups = []
@@ -73,7 +74,6 @@ def extract_details_from_users(driver, manage_users_url):
     Extract users from PWA using BeautifulSoup with simple pagination support.
     """
     try:
-        logging.info("Navegando para a página de usuários...")
         
         # Navigate to ManageUsers page
         driver.get(manage_users_url)
@@ -83,7 +83,6 @@ def extract_details_from_users(driver, manage_users_url):
         page_number = 1
         
         while True:
-            logging.info(f"Processando página {page_number}...")
             
             # Parse current page with BeautifulSoup
             soup = BeautifulSoup(driver.page_source, "html.parser")
@@ -95,15 +94,15 @@ def extract_details_from_users(driver, manage_users_url):
             else:
                 logging.warning(f"⚠️ Página {page_number}: nenhum usuário encontrado")
             
-            # Try to go to next page using simple BeautifulSoup + driver click
-            if _go_to_next_page_simple(driver):
+            # Try to go to next page using browser helper
+            if go_to_next_page(driver):
                 page_number += 1
                 time.sleep(3)  # Wait for new page to load
             else:
                 break
         
         if all_users:
-            logging.info(f"Extração finalizada: {len(all_users)} usuários de {page_number} processados")
+            #logging.info(f"Extração finalizada: {len(all_users)} usuários em {page_number} páginas")
             return all_users
         else:
             logging.warning("⚠️ Nenhum usuário encontrado em todas as páginas")
@@ -126,7 +125,6 @@ def extract_users(soup: BeautifulSoup) -> list:
     
     # Find all data rows (skip header row)
     grid_rows = users_table.find_all("tr", id="GridDataRow")
-    logging.info(f"Encontradas {len(grid_rows)} linhas de usuários na página")
     
     for row in grid_rows:
         columns = row.find_all("td")
@@ -143,7 +141,7 @@ def extract_users(soup: BeautifulSoup) -> list:
             
             if user_name or email_address:  # Only add if we have essential data
                 users.append({
-                    "USER UID": user_id,
+                    "User UID": user_id,
                     "User Name": user_name,
                     "Email Address": email_address,
                     "User Logon Account": logon_account,
@@ -151,38 +149,6 @@ def extract_users(soup: BeautifulSoup) -> list:
                     "RBS": rbs
                 })
     
-    logging.info(f"Total de usuários extraídos: {len(users)}")
     return users
 
 
-def _go_to_next_page_simple(driver):
-    """Simple pagination: find and click next page link if available."""
-    try:
-        from selenium.webdriver.common.by import By
-        from selenium.webdriver.support.ui import WebDriverWait
-        from selenium.webdriver.support import expected_conditions as EC
-        
-        # Find the "Próxima" link directly using Selenium (avoid BeautifulSoup for clicking)
-        try:
-            # Look for the next page link with "Próxima" (Portuguese) or "Next" (English) text
-            next_link = WebDriverWait(driver, 5).until(
-                EC.element_to_be_clickable((By.XPATH, "//a[contains(@class, 'XmlGridPrevNextLink') and (contains(text(), 'Próxima') or contains(text(), 'Next'))]"))
-            )
-            
-            # Get link info for logging
-            # link_text = next_link.text.strip()
-            # link_href = next_link.get_attribute('href')
-            # logging.info(f"🔗 Link encontrado: '{link_text}' -> {link_href}")
-            
-            # Click the link directly instead of executing JavaScript
-            next_link.click()
-            return True
-            
-        except Exception as find_error:
-            logging.info("🔚 Última página alcançada")
-            logging.debug(f"Detalhes: {find_error}")
-            return False
-        
-    except Exception as e:
-        logging.error(f"❌ Erro ao navegar para próxima página: {e}")
-        return False

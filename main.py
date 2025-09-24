@@ -91,7 +91,7 @@ def main():
         try:
             all_users_detailed = extract_details_from_users(driver, manage_users_url)
             if all_users_detailed:
-                logging.info(f"Extração detalhada de usuários finalizada: {len(all_users_detailed)} usuários processados")
+                logging.info(f"Extração de usuários finalizada: {len(all_users_detailed)} usuários processados")
             else:
                 logging.warning("⚠️ Página de usuários não retornou dados")
         except Exception as e:

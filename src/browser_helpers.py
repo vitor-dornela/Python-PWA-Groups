@@ -240,3 +240,27 @@ def get_login(driver, login_url):
             raise Exception("Erro durante o processo de login. Verifique se o navegador não foi fechado.")
 
     logging.info("Autenticação concluída.")
+
+
+def go_to_next_page(driver):
+    """Simple pagination: find and click next page link if available."""
+    try:
+        # Find the "Próxima" link directly using Selenium (avoid BeautifulSoup for clicking)
+        try:
+            # Look for the next page link with "Próxima" (Portuguese) or "Next" (English) text
+            next_link = WebDriverWait(driver, 5).until(
+                EC.element_to_be_clickable((By.XPATH, "//a[contains(@class, 'XmlGridPrevNextLink') and (contains(text(), 'Próxima') or contains(text(), 'Next'))]"))
+            )
+            
+            # Click the link directly instead of executing JavaScript
+            next_link.click()
+            return True
+            
+        except Exception as find_error:
+            logging.info("🔚 Última página alcançada")
+            logging.debug(f"Detalhes: {find_error}")
+            return False
+        
+    except Exception as e:
+        logging.error(f"❌ Erro ao navegar para próxima página: {e}")
+        return False
