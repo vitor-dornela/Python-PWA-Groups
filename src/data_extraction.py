@@ -164,23 +164,22 @@ def _go_to_next_page_simple(driver):
         
         # Find the "Próxima" link directly using Selenium (avoid BeautifulSoup for clicking)
         try:
-            # Look for the next page link with "Próxima" text
+            # Look for the next page link with "Próxima" (Portuguese) or "Next" (English) text
             next_link = WebDriverWait(driver, 5).until(
-                EC.element_to_be_clickable((By.XPATH, "//a[contains(@class, 'XmlGridPrevNextLink') and contains(text(), 'Próxima')]"))
+                EC.element_to_be_clickable((By.XPATH, "//a[contains(@class, 'XmlGridPrevNextLink') and (contains(text(), 'Próxima') or contains(text(), 'Next'))]"))
             )
             
             # Get link info for logging
-            link_text = next_link.text.strip()
-            link_href = next_link.get_attribute('href')
-            logging.info(f"🔗 Link encontrado: '{link_text}' -> {link_href}")
+            # link_text = next_link.text.strip()
+            # link_href = next_link.get_attribute('href')
+            # logging.info(f"🔗 Link encontrado: '{link_text}' -> {link_href}")
             
             # Click the link directly instead of executing JavaScript
             next_link.click()
-            logging.info(f"▶️ Navegando para próxima página via clique direto")
             return True
             
         except Exception as find_error:
-            logging.info("🔚 Nenhum link 'Próxima' encontrado - última página alcançada")
+            logging.info("🔚 Última página alcançada")
             logging.debug(f"Detalhes: {find_error}")
             return False
         
