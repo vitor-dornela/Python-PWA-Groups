@@ -100,7 +100,6 @@ def extract_details_from_users(driver, manage_users_url):
                 page_number += 1
                 time.sleep(3)  # Wait for new page to load
             else:
-                logging.info("Última página alcançada")
                 break
         
         if all_users:
@@ -159,24 +158,32 @@ def extract_users(soup: BeautifulSoup) -> list:
 def _go_to_next_page_simple(driver):
     """Simple pagination: find and click next page link if available."""
     try:
-        # Parse current page with BeautifulSoup to find next page link
-        soup = BeautifulSoup(driver.page_source, "html.parser")
+        from selenium.webdriver.common.by import By
+        from selenium.webdriver.support.ui import WebDriverWait
+        from selenium.webdriver.support import expected_conditions as EC
         
-        # Look for "Próxima" (Next) link
-        next_links = soup.find_all("a", string=lambda text: text and "Próxima" in text)
-        
-        if next_links:
-            # Get the href attribute from the BeautifulSoup element
-            next_href = next_links[0].get("href")
-            if next_href and "javascript:" in next_href:
-                # Execute the JavaScript directly
-                driver.execute_script(next_href.replace("javascript:", ""))
-                logging.info("▶️ Navegando para próxima página...")
-                return True
-        
-        logging.info("🔚 Última página alcançada")
-        return False
+        # Find the "Próxima" link directly using Selenium (avoid BeautifulSoup for clicking)
+        try:
+            # Look for the next page link with "Próxima" text
+            next_link = WebDriverWait(driver, 5).until(
+                EC.element_to_be_clickable((By.XPATH, "//a[contains(@class, 'XmlGridPrevNextLink') and contains(text(), 'Próxima')]"))
+            )
+            
+            # Get link info for logging
+            link_text = next_link.text.strip()
+            link_href = next_link.get_attribute('href')
+            logging.info(f"🔗 Link encontrado: '{link_text}' -> {link_href}")
+            
+            # Click the link directly instead of executing JavaScript
+            next_link.click()
+            logging.info(f"▶️ Navegando para próxima página via clique direto")
+            return True
+            
+        except Exception as find_error:
+            logging.info("🔚 Nenhum link 'Próxima' encontrado - última página alcançada")
+            logging.debug(f"Detalhes: {find_error}")
+            return False
         
     except Exception as e:
-        logging.debug(f"Erro ao navegar para próxima página: {e}")
+        logging.error(f"❌ Erro ao navegar para próxima página: {e}")
         return False
