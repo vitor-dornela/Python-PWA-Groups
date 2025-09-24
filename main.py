@@ -15,22 +15,6 @@ from src.data_extraction import extract_groups, extract_details_from_group
 from src.data_output import save_to_excel
 from src.user_extraction import extract_users_from_excel_export
 
-def get_extraction_method_choice():
-    """Ask user to choose extraction method for user data."""
-    print("\n📊 Selecione o método de extração de usuários:")
-    print("1. Extração tradicional por página (método atual)")
-    print("2. Export to Excel (novo método - mais rápido) 🚀")
-    
-    while True:
-        choice = input("\nDigite 1 ou 2 (padrão: Excel Export): ").strip()
-        
-        if choice == "" or choice == "2":
-            return "excel_export"
-        elif choice == "1":
-            return "page_scraping"
-        else:
-            print("❌ Opção inválida. Digite 1 ou 2.")
-
 def main():
     # Suppress Selenium verbose logging
     os.environ['WDM_LOG_LEVEL'] = '0'
@@ -45,9 +29,6 @@ def main():
 
     # Get browser choice from user
     browser_choice = get_browser_choice()
-
-    # Get extraction method choice from user  
-    extraction_method = get_extraction_method_choice()
 
     # Get the URLs and output file.
     pwa_instance_url = get_pwa_instance_url()
@@ -94,42 +75,26 @@ def main():
         soup = BeautifulSoup(driver.page_source, "html.parser")
         groups = extract_groups(soup, group_edit_page)
         
-        # Extract user data based on chosen method
-        users = []
+        # Extract user data from groups (for UsersGroups tab) 
+        users_groups = []
         categories = []
+        for group in groups:
+            extract_details_from_group(driver, group, users_groups, categories, wait_for_element, group_edit_page)
         
-        if extraction_method == "excel_export":
-            logging.info("🚀 Usando método Excel Export para extração de usuários...")
-            try:
-                # Try Excel export method first
-                all_users = extract_users_from_excel_export(driver, pwa_instance_url)
-                
-                if all_users:
-                    logging.info(f"✅ Excel Export bem-sucedido: {len(all_users)} usuários encontrados")
-                    users = all_users
-                else:
-                    logging.warning("⚠️ Excel Export falhou, usando método tradicional como fallback...")
-                    extraction_method = "page_scraping"
-                    
-            except Exception as e:
-                logging.error(f"❌ Erro no Excel Export: {e}")
-                logging.info("📄 Fazendo fallback para método tradicional...")
-                extraction_method = "page_scraping"
+        # Extract all user data from Excel export (for new Users tab with detailed info)
+        all_users_detailed = []
+        logging.info("🚀 Extraindo informações detalhadas de usuários via Excel Export...")
+        try:
+            all_users_detailed = extract_users_from_excel_export(driver, pwa_instance_url)
+            if all_users_detailed:
+                logging.info(f"✅ Excel Export bem-sucedido: {len(all_users_detailed)} usuários encontrados")
+            else:
+                logging.warning("⚠️ Excel Export não retornou dados")
+        except Exception as e:
+            logging.error(f"❌ Erro no Excel Export: {e}")
         
-        if extraction_method == "page_scraping":
-            logging.info("📄 Usando método tradicional para extração de usuários...")
-            # Traditional method: extract users from each group page
-            for group in groups:
-                extract_details_from_group(driver, group, users, categories, wait_for_element, group_edit_page)
-        else:
-            # For Excel export, we still need to extract categories from group pages
-            logging.info("📋 Extraindo categorias dos grupos...")
-            for group in groups:
-                temp_users = []
-                extract_details_from_group(driver, group, temp_users, categories, wait_for_element, group_edit_page)
-        
-        # Save the data to an Excel file.
-        save_to_excel(groups, users, categories, output_file)
+        # Save the data to an Excel file with both user datasets
+        save_to_excel(groups, users_groups, categories, all_users_detailed, output_file)
     finally:
         driver.quit()
         if platform.system() == "Windows":

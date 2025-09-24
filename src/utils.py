@@ -59,12 +59,13 @@ def start_screen():
 
         ---------------------------------------------------------------------------
         ℹ️  INFORMAÇÃO: O script abrirá uma nova janela do navegador selecionado.
-        🚀  NOVO: Método Excel Export para extração mais rápida de usuários!
+        🚀  Extração automática de informações detalhadas dos usuários!
         ---------------------------------------------------------------------------
 
         Saída:
           - Um arquivo Excel será gerado na pasta Downloads com o nome 'pwa_data'.
-          - No arquivo há 4 páginas:
+          - No arquivo há 5 páginas:
+              - Users: Informações detalhadas dos usuários (email, status, etc.)
               - UsersGroups: Lista de usuários associados a cada grupo
               - CountUsersGroups: Contagem de usuários por grupo
               - Groups: Lista de grupos e suas informações
