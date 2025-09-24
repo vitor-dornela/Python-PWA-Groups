@@ -28,18 +28,40 @@ def _create_table_and_format(worksheet, df, table_name, table_style):
     # Add table to worksheet
     worksheet.add_table(table)
     
-    # Auto-adjust column widths
-    for column in worksheet.columns:
-        max_length = 0
-        column_letter = column[0].column_letter
+    # Auto-fit columns exactly like Excel's double-click behavior
+    from openpyxl.utils import get_column_letter
+    
+    for idx, column in enumerate(worksheet.columns, 1):
+        column_letter = get_column_letter(idx)
+        
+        # Find the maximum content width in this column
+        max_width = 0
         for cell in column:
-            if cell.value:
-                max_length = max(max_length, len(str(cell.value)))
-        worksheet.column_dimensions[column_letter].width = min(max_length + 2, 50)
+            if cell.value is not None:
+                # Convert to string and measure
+                cell_text = str(cell.value)
+                cell_width = len(cell_text)
+                max_width = max(max_width, cell_width)
+        
+        # Apply Excel-like auto-fit: content width + minimal padding
+        if max_width > 0:
+            # Excel's auto-fit typically adds ~1.2 character width for padding
+            auto_fit_width = max_width + 1.2
+            # Set reasonable min/max bounds
+            final_width = max(8.43, min(auto_fit_width, 120))  # Excel's default min is ~8.43
+        else:
+            final_width = 8.43  # Excel's default column width
+            
+        worksheet.column_dimensions[column_letter].width = final_width
 
 def save_to_excel(groups: list, users_groups: list, categories: list, all_users_detailed: list, output_file: str):
-    logging.info("Salvando dados em Excel: %d grupos, %d usuários (grupos), %d categorias, %d usuários (detalhados)", 
-                len(groups), len(users_groups), len(categories), len(all_users_detailed))
+    # Calculate distinct counts for the 3 main data types
+    distinct_groups = len(groups)
+    distinct_categories = len({cat.get('Category UID') for cat in categories if cat.get('Category UID')})
+    distinct_users = len({user.get('USER UID') for user in all_users_detailed if user.get('USER UID')})
+    
+    logging.info("Salvando dados em Excel: %d grupos, %d categorias, %d usuários", 
+                distinct_groups, distinct_categories, distinct_users)
     
     df_groups = pd.DataFrame(groups)
     df_users_groups = pd.DataFrame(users_groups)

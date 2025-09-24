@@ -11,41 +11,8 @@ from bs4 import BeautifulSoup
 from src.config import LOGIN_URL, GROUP_CONTAINER_ID, FILE_NAME, OUTPUT_DIRECTORY
 from src.utils import get_pwa_instance_url, get_output_file, start_screen, browser_config_message, browser_closed_message, extraction_complete_message
 from src.browser_helpers import wait_for_element, close_browsers, get_login, get_browser_choice, create_browser_driver
-from src.data_extraction import extract_groups, extract_details_from_group
+from src.data_extraction import extract_groups, extract_details_from_group, extract_details_from_users
 from src.data_output import save_to_excel
-from src.user_extraction import extract_users_from_excel_export
-
-def _create_fallback_user_data(users_groups):
-    """
-    Create fallback user data from users_groups when Excel export fails.
-    This ensures the Users tab always has some data to display.
-    """
-    if not users_groups:
-        return []
-    
-    # Extract unique users from users_groups and create basic user records
-    seen_users = set()
-    fallback_users = []
-    
-    for user_group in users_groups:
-        user_name = user_group.get('User Name')
-        user_uid = user_group.get('User UID')
-        
-        if user_name and user_uid and user_uid not in seen_users:
-            seen_users.add(user_uid)
-            
-            # Create basic user record with available information
-            user_record = {
-                'User Name': user_name,
-                'User UID': user_uid,
-                'Email': f"{user_name.replace(' ', '.').lower()}@company.com",  # Placeholder
-                'Status': 'Active',  # Placeholder
-                'Title': 'N/A',  # Placeholder - would come from Excel export
-                'Department': 'N/A'  # Placeholder - would come from Excel export
-            }
-            fallback_users.append(user_record)
-    
-    return fallback_users
 
 def main():
     # Suppress Selenium verbose logging
@@ -113,25 +80,22 @@ def main():
         for group in groups:
             extract_details_from_group(driver, group, users_groups, categories, wait_for_element, group_edit_page)
         
-        # Extract all user data from Excel export (for new Users tab with detailed info)
+        # Extract all user data from PWA grid (for new Users tab with detailed info)
         all_users_detailed = []
-        logging.info("🚀 Extraindo informações detalhadas de usuários via Excel Export...")
+        logging.info("Extraindo informações de usuários...")
+        
+        # Construct the proper ManageUsers URL
+        from src.config import MANAGE_USERS_PATH
+        manage_users_url = pwa_instance_url.rstrip('/') + '/' + MANAGE_USERS_PATH.lstrip('/')
+        
         try:
-            all_users_detailed = extract_users_from_excel_export(driver, pwa_instance_url)
+            all_users_detailed = extract_details_from_users(driver, manage_users_url)
             if all_users_detailed:
-                logging.info(f"✅ Excel Export bem-sucedido: {len(all_users_detailed)} usuários encontrados")
+                logging.info(f"Extração detalhada de usuários finalizada: {len(all_users_detailed)} usuários processados")
             else:
-                logging.warning("⚠️ Excel Export não retornou dados")
-                # Create sample data from users_groups as fallback
-                all_users_detailed = _create_fallback_user_data(users_groups)
-                if all_users_detailed:
-                    logging.info(f"📋 Usando dados de fallback: {len(all_users_detailed)} usuários")
+                logging.warning("⚠️ Página de usuários não retornou dados")
         except Exception as e:
-            logging.error(f"❌ Erro no Excel Export: {e}")
-            # Create sample data from users_groups as fallback
-            all_users_detailed = _create_fallback_user_data(users_groups)
-            if all_users_detailed:
-                logging.info(f"📋 Usando dados de fallback: {len(all_users_detailed)} usuários")
+            logging.error(f"❌ Erro na extração de usuários: {e}")
         
         # Save the data to an Excel file with both user datasets
         save_to_excel(groups, users_groups, categories, all_users_detailed, output_file)
