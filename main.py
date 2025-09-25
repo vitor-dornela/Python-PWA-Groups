@@ -49,7 +49,7 @@ def main():
     try:
         # Prompt the user to log in.
         try:
-            get_login(driver, LOGIN_URL)
+            get_login(driver, LOGIN_URL, groups_page)
         except Exception as login_error:
             if "navegador foi fechado" in str(login_error):
                 print(browser_closed_message())

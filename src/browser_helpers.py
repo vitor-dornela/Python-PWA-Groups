@@ -205,11 +205,12 @@ def create_browser_driver(browser_choice="chrome"):
             raise Exception("Não foi possível iniciar o Chrome. Verifique se o Chrome está instalado corretamente.")
 
 
-def get_login(driver, login_url):     
+def get_login(driver, login_url, target_url=None):     
     """Handle user login and wait for completion."""
     driver.get(login_url)
     logging.info("Por favor, complete o processo de login na janela do navegador...")
     logging.info("IMPORTANTE: Não feche o navegador! Aguarde até ser redirecionado após o login.")
+    logging.info("💡 Dica: Após fazer login, aguarde alguns segundos para que o sistema detecte automaticamente.")
 
     try:        
         def check_login_completion(d):
@@ -218,28 +219,72 @@ def get_login(driver, login_url):
                 current_url = d.current_url
                 if current_url is None:
                     return False
-                    
-                # Check if we're no longer on the Microsoft login page
-                return "login.microsoftonline.com" not in current_url
                 
-            except Exception:
+                logging.debug(f"🔍 Verificando URL atual: {current_url}")
+                
+                # If we have a target URL, handle Microsoft 365 portal redirects
+                if target_url:
+                    from urllib.parse import urlparse
+                    target_parsed = urlparse(target_url)
+                    
+                    # Extract the PWA instance path (e.g., "/sites/PWA_INSTANCE/")
+                    pwa_instance_path = target_parsed.path.rstrip('/')
+                    target_domain = target_parsed.netloc
+                    
+                    # Check if we're at Microsoft 365 portal (common redirect after login)
+                    if "m365.cloud.microsoft" in current_url:
+                        logging.info("🔄 Detectado redirecionamento para Microsoft 365 portal. Navegando para PWA...")
+                        d.get(target_url)
+                        return False  # Continue waiting for actual PWA site
+                    
+                    # Check if we're at the specific PWA instance site
+                    current_parsed = urlparse(current_url)
+                    login_completed = (
+                        current_parsed.netloc == target_domain and 
+                        current_parsed.path.startswith(pwa_instance_path) and
+                        ".sharepoint.com" in current_url
+                    )
+                    
+                    if login_completed:
+                        logging.info(f"✅ Login detectado! Acesso à instância PWA: {current_url}")
+                    else:
+                        logging.debug(f"⏳ Aguardando acesso à instância PWA ({target_domain}{pwa_instance_path}): {current_url}")
+                    
+                    return login_completed
+                else:
+                    # Fallback: generic SharePoint/PWA detection
+                    login_completed = (".sharepoint.com" in current_url and 
+                                     ("_layouts/15/PWA" in current_url or "/PWA/" in current_url))
+                    
+                    if login_completed:
+                        logging.info(f"✅ Login detectado! Redirecionado para: {current_url}")
+                    
+                    return login_completed
+                
+            except Exception as e:
+                logging.debug(f"Erro ao verificar login: {e}")
                 # If we can't get the current URL, the browser might be closed
-                # Don't log the full error details, just raise a clean exception
                 raise Exception("O navegador foi fechado durante o processo de login.")
         
-        WebDriverWait(driver, 600).until(check_login_completion)
+        # Increased timeout to 900 seconds (15 minutes) for better flexibility
+        WebDriverWait(driver, 900).until(check_login_completion)
         
     except TimeoutException:
-        logging.error("Autenticação não concluída dentro do tempo limite de 600 segundos.")
-        raise Exception("Timeout: Microsoft authentication not completed.")
+        current_url = driver.current_url if driver else "N/A"
+        logging.error(f"⏰ Timeout: Autenticação não concluída em 15 minutos.")
+        logging.error(f"🌐 URL atual: {current_url}")
+        logging.error("💡 Verifique se você completou o login e foi redirecionado corretamente.")
+        raise Exception("Timeout: Login não foi completado dentro do tempo limite de 15 minutos.")
     except Exception as e:
         if "navegador foi fechado" in str(e):
             raise e
         else:
-            logging.error(f"Erro durante o processo de login: {e}")
+            current_url = driver.current_url if driver else "N/A"
+            logging.error(f"❌ Erro durante o processo de login: {e}")
+            logging.error(f"🌐 URL atual: {current_url}")
             raise Exception("Erro durante o processo de login. Verifique se o navegador não foi fechado.")
 
-    logging.info("Autenticação concluída.")
+    logging.info("🎉 Autenticação concluída com sucesso!")
 
 
 def go_to_next_page(driver):
